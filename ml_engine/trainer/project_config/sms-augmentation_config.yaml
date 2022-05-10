@@ -1,0 +1,53 @@
+project_name: sms-augmentation
+stage: serve-staging
+production: serve
+
+sms_augment:
+  preprocess:
+    country:
+      - TW
+    original_cols: 
+      - content
+      - labels
+    is_multiclass: true
+    character_length_limit: 5
+  local:
+    source_data_folder: /tmp/sms/source_data
+    processed_data_folder: /tmp/sms/processed_data
+    augment_data_folder: /tmp/sms/augmented_data
+    checkpoint_path: /tmp/model_checkpoint
+    model_path: /tmp/model
+  staging:
+    deploy_folder: serve-staging/sms-augmentation/deploy
+    raw_sms_folder: serve-staging/sms/data/cleaned_data
+    processed_sms_folder: serve-staging/sms-augmentation/data/processed_datasets_data
+    augmented_sms_folder: serve-staging/sms-augmentation/data/augment_data
+    model_folder: serve-staging/sms-augmentation/model
+    job_folder: serve-staging/sms-augmentation/output
+  production:
+    deploy_folder: serve/sms-augmentation/deploy
+    raw_sms_folder: serve/sms/data/cleaned_data
+    processed_sms_folder: serve/sms-augmentation/data/processed_datasets_data
+    augmented_sms_folder: serve/sms-augmentation/data/augment_data
+    model_folder: serve/sms-augmentation/model
+    job_folder: serve/sms-augmentation/output
+
+gcp_mlengine_spec:
+  region: asia-east1
+  train_config:
+    scale_tier: CUSTOM
+    master_type: complex_model_m_p100
+    master_image_uri: gcr.io/cloud-ml-public/training/pytorch-gpu.1-7
+    python_version: "3.7"
+  predict_config:
+    scale_tier: CUSTOM
+    master_type: standard_p100
+    master_image_uri: gcr.io/cloud-ml-public/training/pytorch-gpu.1-7
+    python_version: "3.7"
+        
+wandb:
+  ssm_key_name: /ssm/service/ml/weights-biases/marssu/apikey
+  save_path: /tmp/wandb
+  tags:
+    - sms-augmentation
+    - cbert
